@@ -47,10 +47,28 @@ body {
   color: var(--muted);
 }
 
-.grid {
+.control-rows {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.75rem;
+}
+
+.control-row {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.control-row--top {
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+}
+
+.control-row--middle {
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+}
+
+.control-row--actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
 
 label {
@@ -78,13 +96,6 @@ button.primary {
   background: var(--accent);
   color: #fff;
   font-weight: 600;
-}
-
-.action-row {
-  margin-top: 0.85rem;
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
 }
 
 .summary {
@@ -199,5 +210,12 @@ button.primary {
 
   .marker {
     font-size: 0.64rem;
+  }
+}
+
+@media (max-width: 800px) {
+  .control-row--top,
+  .control-row--middle {
+    grid-template-columns: 1fr;
   }
 }
