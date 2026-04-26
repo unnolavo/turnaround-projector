@@ -98,24 +98,6 @@ button.primary {
   font-weight: 600;
 }
 
-.summary {
-  line-height: 1.5;
-}
-
-.summary h3 {
-  margin: 0 0 0.5rem;
-}
-
-.summary .pill {
-  display: inline-block;
-  margin-right: 0.4rem;
-  margin-bottom: 0.4rem;
-  border-radius: 999px;
-  padding: 0.25rem 0.65rem;
-  border: 1px solid var(--border);
-  font-size: 0.9rem;
-}
-
 .calendar-toolbar {
   display: flex;
   align-items: center;

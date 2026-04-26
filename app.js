@@ -142,7 +142,6 @@ const refs = {
   shippingMethod: document.getElementById("shippingMethod"),
   todayBtn: document.getElementById("todayBtn"),
   calculateBtn: document.getElementById("calculateBtn"),
-  summary: document.getElementById("summary"),
   monthLabel: document.getElementById("monthLabel"),
   calendar: document.getElementById("calendar"),
   legend: document.getElementById("legend"),
@@ -226,13 +225,11 @@ function getTodayInTimeZoneISO(timeZone) {
 
 function calculate() {
   if (!refs.orderDate.value) {
-    refs.summary.innerHTML = "<p>Select an order date to begin.</p>";
     return;
   }
 
   const productionDays = Number(refs.productionDays.value);
   if (!Number.isInteger(productionDays) || productionDays <= 0) {
-    refs.summary.innerHTML = "<p>Production days must be a whole number greater than 0.</p>";
     return;
   }
 
@@ -252,7 +249,6 @@ function calculate() {
   state.viewYear = timeline.anchorDate.getUTCFullYear();
   state.viewMonth = timeline.anchorDate.getUTCMonth();
 
-  renderSummary({ domainCode, method, timeline, productionDays });
   renderCalendar();
 }
 
@@ -290,25 +286,6 @@ function buildTimeline({ orderDate, productionDays, shippingMin, shippingMax, sh
     latestDelivery,
     shippingUsesUSHolidays
   };
-}
-
-function renderSummary({ domainCode, method, timeline, productionDays }) {
-  const fmt = formatLongDate;
-  const isRange = method.min !== method.max;
-
-  refs.summary.innerHTML = `
-    <h3>Estimated Turnaround</h3>
-    <p>
-      <span class="pill">Domain: ${DOMAIN_CONFIG[domainCode].label}</span>
-      <span class="pill">Shipping: ${method.label}</span>
-      <span class="pill">Production: ${productionDays} bd</span>
-    </p>
-    <p><strong>Production window:</strong> ${fmt(timeline.productionDays[0])} → ${fmt(timeline.productionDays[timeline.productionDays.length - 1])}</p>
-    <p><strong>Queue for shipment:</strong> ${fmt(timeline.queueDay)}</p>
-    <p><strong>Transit:</strong> ${method.min}${isRange ? `-${method.max}` : ""} business day${isRange ? "s" : ""}</p>
-    <p><strong>Delivery estimate:</strong> ${fmt(timeline.earliestDelivery)}${isRange ? ` to ${fmt(timeline.latestDelivery)}` : ""}</p>
-    <p class="muted-note">Shipping holiday logic: ${timeline.shippingUsesUSHolidays ? "US holidays excluded" : "No holiday exclusion for transit (weekends excluded)"}.</p>
-  `;
 }
 
 function renderCalendar() {
