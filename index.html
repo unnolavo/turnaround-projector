@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Turnaround Estimator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div>
+          <h1>Turnaround Estimator</h1>
+          <p>Estimate production, queue, and delivery timelines with business-day logic.</p>
+        </div>
+      </header>
+
+      <section class="panel controls">
+        <div class="grid">
+          <label>
+            Domain
+            <select id="domainSelect"></select>
+          </label>
+
+          <label>
+            Time zone
+            <select id="timezoneSelect">
+              <option value="America/New_York">US Eastern</option>
+              <option value="America/Chicago">US Central</option>
+              <option value="America/Denver">US Mountain</option>
+              <option value="America/Los_Angeles">US Pacific</option>
+              <option value="Europe/Dublin" selected>Ireland (Europe/Dublin)</option>
+            </select>
+          </label>
+
+          <label>
+            Order date
+            <input type="date" id="orderDate" />
+          </label>
+
+          <label>
+            Production days (business days)
+            <input type="number" id="productionDays" min="1" step="1" value="2" />
+          </label>
+
+          <label>
+            Shipping method
+            <select id="shippingMethod"></select>
+          </label>
+        </div>
+
+        <div class="action-row">
+          <button id="todayBtn" type="button">Use Today in Selected Time Zone</button>
+          <button id="calculateBtn" type="button" class="primary">Calculate</button>
+        </div>
+      </section>
+
+      <section class="panel summary" id="summary"></section>
+
+      <section class="panel calendar-panel">
+        <div class="calendar-toolbar">
+          <button id="prevMonth" aria-label="Previous month">◀</button>
+          <h2 id="monthLabel"></h2>
+          <button id="nextMonth" aria-label="Next month">▶</button>
+        </div>
+        <div id="calendar" class="calendar"></div>
+        <div class="legend" id="legend"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
