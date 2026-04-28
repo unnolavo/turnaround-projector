@@ -254,7 +254,8 @@ function calculate() {
 
 function buildTimeline({ orderDate, productionDays, shippingMin, shippingMax, shippingUsesUSHolidays }) {
   const years = new Set([orderDate.getUTCFullYear(), orderDate.getUTCFullYear() + 1]);
-  const usHolidaySet = buildUSHolidaySet(years);
+  const usHolidayMap = buildUSHolidayMap(years);
+  const usHolidaySet = new Set(usHolidayMap.keys());
 
   const productionDaysList = [];
   let cursor = addDaysUTC(orderDate, 1);
@@ -284,7 +285,8 @@ function buildTimeline({ orderDate, productionDays, shippingMin, shippingMax, sh
     transitDaysMax: transitMaxDays,
     earliestDelivery,
     latestDelivery,
-    shippingUsesUSHolidays
+    shippingUsesUSHolidays,
+    usHolidayMap
   };
 }
 
@@ -325,15 +327,46 @@ function buildDayCell(date, visibleMonth) {
 
   const dateKey = toISODate(date);
   const tags = [];
+  const holidayName = state.timeline.usHolidayMap.get(dateKey);
+  const isWeekday = date.getUTCDay() >= 1 && date.getUTCDay() <= 5;
+  const hasNoProduction = Boolean(holidayName && isWeekday);
+  const hasNoShipping = Boolean(holidayName && isWeekday && state.timeline.shippingUsesUSHolidays);
+  const isProduction = hasDate(state.timeline.productionDays, dateKey);
+  const isQueue = toISODate(state.timeline.queueDay) === dateKey;
+  const isTransit = hasDate(state.timeline.transitDaysMax, dateKey);
 
-  if (hasDate(state.timeline.productionDays, dateKey)) {
+  if (isProduction) {
     tags.push({ cls: "m-production", label: "Production" });
   }
-  if (toISODate(state.timeline.queueDay) === dateKey) {
+  if (isQueue) {
     tags.push({ cls: "m-queue", label: "Queue" });
   }
-  if (hasDate(state.timeline.transitDaysMax, dateKey)) {
+  if (isTransit) {
     tags.push({ cls: "m-transit", label: "Transit" });
+  }
+  if (hasNoProduction) {
+    tags.push({ cls: "m-blocked", label: "No Production" });
+    tags.push({ cls: "m-occasion", label: holidayName });
+  }
+  if (hasNoShipping) {
+    tags.push({ cls: "m-blocked-ship", label: "No Shipping" });
+    if (!hasNoProduction) {
+      tags.push({ cls: "m-occasion", label: holidayName });
+    }
+  }
+
+  if (hasNoProduction && hasNoShipping) {
+    cell.classList.add("status-blocked-both");
+  } else if (hasNoProduction) {
+    cell.classList.add("status-blocked-production");
+  } else if (hasNoShipping) {
+    cell.classList.add("status-blocked-shipping");
+  } else if (isProduction) {
+    cell.classList.add("status-production");
+  } else if (isQueue) {
+    cell.classList.add("status-queue");
+  } else if (isTransit) {
+    cell.classList.add("status-transit");
   }
 
   if (dateKey === toISODate(state.timeline.earliestDelivery) || dateKey === toISODate(state.timeline.latestDelivery)) {
@@ -367,9 +400,11 @@ function buildDayCell(date, visibleMonth) {
 
 function renderLegend() {
   refs.legend.innerHTML = `
-    <span class="legend-item" title="Production business days"><span class="swatch" style="background: var(--production)"></span>Production</span>
-    <span class="legend-item" title="Queue for shipment day"><span class="swatch" style="background: var(--queue)"></span>Queue for shipment</span>
-    <span class="legend-item" title="Transit business days"><span class="swatch" style="background: var(--transit)"></span>Transit days</span>
+    <span class="legend-item" title="Production business days"><span class="swatch" style="background: var(--production-cell)"></span>Production</span>
+    <span class="legend-item" title="Queue for shipment day"><span class="swatch" style="background: var(--queue-cell)"></span>Queue for shipment</span>
+    <span class="legend-item" title="Transit business days"><span class="swatch" style="background: var(--transit-cell)"></span>Transit days</span>
+    <span class="legend-item" title="Weekday holiday impact on production"><span class="swatch" style="background: var(--blocked-prod-cell)"></span>No Production</span>
+    <span class="legend-item" title="Weekday holiday impact on shipping"><span class="swatch" style="background: var(--blocked-ship-cell)"></span>No Shipping</span>
     <span class="legend-item" title="Estimated delivery (underlined)"><span class="swatch" style="background: #fff; border-bottom: 4px solid var(--delivery)"></span>Delivery date</span>
   `;
 }
@@ -426,32 +461,34 @@ function hasDate(list, isoDate) {
   return list.some((d) => toISODate(d) === isoDate);
 }
 
-function buildUSHolidaySet(years) {
-  const set = new Set();
+function buildUSHolidayMap(years) {
+  const map = new Map();
   years.forEach((year) => {
-    usFederalHolidays(year).forEach((d) => set.add(toISODate(d)));
+    usFederalHolidays(year).forEach((holiday) => map.set(toISODate(holiday.date), holiday.name));
   });
-  return set;
+  return map;
 }
 
 function usFederalHolidays(year) {
   const list = [];
 
   const fixed = [
-    [0, 1],
-    [5, 19],
-    [6, 4],
-    [10, 11],
-    [11, 25]
+    [0, 1, "New Year's Day"],
+    [5, 19, "Juneteenth"],
+    [6, 4, "Independence Day"],
+    [10, 11, "Veterans Day"],
+    [11, 25, "Christmas Day"]
   ];
-  fixed.forEach(([month, day]) => list.push(observedDate(new Date(Date.UTC(year, month, day)))));
+  fixed.forEach(([month, day, name]) =>
+    list.push({ date: observedDate(new Date(Date.UTC(year, month, day))), name })
+  );
 
-  list.push(nthWeekdayOfMonth(year, 0, 1, 3));
-  list.push(nthWeekdayOfMonth(year, 1, 1, 3));
-  list.push(lastWeekdayOfMonth(year, 4, 1));
-  list.push(nthWeekdayOfMonth(year, 8, 1, 1));
-  list.push(nthWeekdayOfMonth(year, 9, 1, 2));
-  list.push(nthWeekdayOfMonth(year, 10, 4, 4));
+  list.push({ date: nthWeekdayOfMonth(year, 0, 1, 3), name: "Martin Luther King Jr. Day" });
+  list.push({ date: nthWeekdayOfMonth(year, 1, 1, 3), name: "Washington's Birthday" });
+  list.push({ date: lastWeekdayOfMonth(year, 4, 1), name: "Memorial Day" });
+  list.push({ date: nthWeekdayOfMonth(year, 8, 1, 1), name: "Labor Day" });
+  list.push({ date: nthWeekdayOfMonth(year, 9, 1, 2), name: "Columbus Day" });
+  list.push({ date: nthWeekdayOfMonth(year, 10, 4, 4), name: "Thanksgiving Day" });
 
   return list;
 }

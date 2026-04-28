@@ -5,9 +5,12 @@
   --muted: #607086;
   --border: #d8e2f0;
   --accent: #2f6df6;
-  --production: #fee8b8;
-  --queue: #cde6ff;
-  --transit: #d7f3dc;
+  --production-cell: #ffd166;
+  --queue-cell: #4cc9f0;
+  --transit-cell: #80ed99;
+  --blocked-prod-cell: #ff6b6b;
+  --blocked-ship-cell: #f72585;
+  --blocked-both-cell: #b5179e;
   --delivery: #f59e0b;
 }
 
@@ -152,11 +155,23 @@ button.primary {
   font-size: 0.72rem;
   padding: 0.12rem 0.3rem;
   display: inline-block;
+  color: #172331;
+  font-weight: 600;
 }
 
-.m-production { background: var(--production); }
-.m-queue { background: var(--queue); }
-.m-transit { background: var(--transit); }
+.m-production { background: rgba(255, 243, 214, 0.95); }
+.m-queue { background: rgba(217, 245, 255, 0.95); }
+.m-transit { background: rgba(223, 255, 228, 0.95); }
+.m-blocked { background: rgba(255, 223, 223, 0.95); color: #7a0f0f; }
+.m-blocked-ship { background: rgba(255, 214, 235, 0.95); color: #6d0038; }
+.m-occasion { background: rgba(255, 255, 255, 0.76); font-weight: 500; }
+
+.day-cell.status-production { background: var(--production-cell); }
+.day-cell.status-queue { background: var(--queue-cell); }
+.day-cell.status-transit { background: var(--transit-cell); }
+.day-cell.status-blocked-production { background: var(--blocked-prod-cell); color: #fff; }
+.day-cell.status-blocked-shipping { background: var(--blocked-ship-cell); color: #fff; }
+.day-cell.status-blocked-both { background: var(--blocked-both-cell); color: #fff; }
 
 .day-cell.delivery {
   box-shadow: inset 0 -4px 0 var(--delivery);
