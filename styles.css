@@ -5,13 +5,15 @@
   --muted: #607086;
   --border: #d8e2f0;
   --accent: #2f6df6;
-  --production-cell: #ffd166;
-  --queue-cell: #4cc9f0;
-  --transit-cell: #80ed99;
-  --blocked-prod-cell: #ff6b6b;
-  --blocked-ship-cell: #f72585;
-  --blocked-both-cell: #b5179e;
-  --delivery: #f59e0b;
+  --production-cell: #f2c879;
+  --queue-cell: #e8a258;
+  --transit-cell: #c7774f;
+  --delivery-earliest-cell: #dd8f7a;
+  --delivery-latest-cell: #c4766e;
+  --blocked-prod-cell: #d64545;
+  --blocked-ship-cell: #bf2f3f;
+  --blocked-both-cell: #a62938;
+  --delivery-underline: #b25d57;
 }
 
 * {
@@ -159,9 +161,11 @@ button.primary {
   font-weight: 600;
 }
 
-.m-production { background: rgba(255, 243, 214, 0.95); }
-.m-queue { background: rgba(217, 245, 255, 0.95); }
-.m-transit { background: rgba(223, 255, 228, 0.95); }
+.m-production { background: rgba(255, 243, 219, 0.92); }
+.m-queue { background: rgba(255, 229, 202, 0.92); }
+.m-transit { background: rgba(244, 215, 197, 0.92); }
+.m-delivery-earliest { background: rgba(243, 219, 212, 0.94); }
+.m-delivery-latest { background: rgba(236, 206, 201, 0.94); }
 .m-blocked { background: rgba(255, 223, 223, 0.95); color: #7a0f0f; }
 .m-blocked-ship { background: rgba(255, 214, 235, 0.95); color: #6d0038; }
 .m-occasion { background: rgba(255, 255, 255, 0.76); font-weight: 500; }
@@ -173,8 +177,14 @@ button.primary {
 .day-cell.status-blocked-shipping { background: var(--blocked-ship-cell); color: #fff; }
 .day-cell.status-blocked-both { background: var(--blocked-both-cell); color: #fff; }
 
-.day-cell.delivery {
-  box-shadow: inset 0 -4px 0 var(--delivery);
+.day-cell.delivery-earliest {
+  box-shadow: inset 0 -4px 0 var(--delivery-underline);
+  outline: 2px solid var(--delivery-earliest-cell);
+}
+
+.day-cell.delivery-latest {
+  box-shadow: inset 0 -4px 0 var(--delivery-underline);
+  outline: 2px solid var(--delivery-latest-cell);
 }
 
 .legend {

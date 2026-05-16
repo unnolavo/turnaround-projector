@@ -369,8 +369,13 @@ function buildDayCell(date, visibleMonth) {
     cell.classList.add("status-transit");
   }
 
-  if (dateKey === toISODate(state.timeline.earliestDelivery) || dateKey === toISODate(state.timeline.latestDelivery)) {
-    cell.classList.add("delivery");
+  const isEarliestDelivery = dateKey === toISODate(state.timeline.earliestDelivery);
+  const isLatestDelivery = dateKey === toISODate(state.timeline.latestDelivery);
+  if (isEarliestDelivery) {
+    cell.classList.add("delivery-earliest");
+  }
+  if (isLatestDelivery) {
+    cell.classList.add("delivery-latest");
   }
 
   cell.innerHTML = `<div class="day-num">${date.getUTCDate()}</div>`;
@@ -382,15 +387,15 @@ function buildDayCell(date, visibleMonth) {
     cell.append(marker);
   });
 
-  if (dateKey === toISODate(state.timeline.earliestDelivery) && dateKey !== toISODate(state.timeline.latestDelivery)) {
+  if (isEarliestDelivery && dateKey !== toISODate(state.timeline.latestDelivery)) {
     const marker = document.createElement("div");
-    marker.className = "marker m-transit";
+    marker.className = "marker m-delivery-earliest";
     marker.textContent = "Earliest delivery";
     cell.append(marker);
   }
-  if (dateKey === toISODate(state.timeline.latestDelivery)) {
+  if (isLatestDelivery) {
     const marker = document.createElement("div");
-    marker.className = "marker m-transit";
+    marker.className = "marker m-delivery-latest";
     marker.textContent = "Latest delivery";
     cell.append(marker);
   }
@@ -403,9 +408,11 @@ function renderLegend() {
     <span class="legend-item" title="Production business days"><span class="swatch" style="background: var(--production-cell)"></span>Production</span>
     <span class="legend-item" title="Queue for shipment day"><span class="swatch" style="background: var(--queue-cell)"></span>Queue for shipment</span>
     <span class="legend-item" title="Transit business days"><span class="swatch" style="background: var(--transit-cell)"></span>Transit days</span>
+    <span class="legend-item" title="Earliest delivery estimate"><span class="swatch" style="background: var(--delivery-earliest-cell)"></span>Earliest delivery</span>
+    <span class="legend-item" title="Latest delivery estimate"><span class="swatch" style="background: var(--delivery-latest-cell)"></span>Latest delivery</span>
     <span class="legend-item" title="Weekday holiday impact on production"><span class="swatch" style="background: var(--blocked-prod-cell)"></span>No Production</span>
     <span class="legend-item" title="Weekday holiday impact on shipping"><span class="swatch" style="background: var(--blocked-ship-cell)"></span>No Shipping</span>
-    <span class="legend-item" title="Estimated delivery (underlined)"><span class="swatch" style="background: #fff; border-bottom: 4px solid var(--delivery)"></span>Delivery date</span>
+    <span class="legend-item" title="Estimated delivery date (underline marker)"><span class="swatch" style="background: #fff; border-bottom: 4px solid var(--delivery-underline)"></span>Delivery underline</span>
   `;
 }
 
