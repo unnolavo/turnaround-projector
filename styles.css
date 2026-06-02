@@ -7,6 +7,7 @@
   --accent: #2f6df6;
   --production-cell: #f2c879;
   --queue-cell: #e8a258;
+  --carrier-cell: #d98a4e;
   --transit-cell: #c7774f;
   --delivery-earliest-cell: #dd8f7a;
   --delivery-latest-cell: #c4766e;
@@ -67,7 +68,7 @@ body {
 }
 
 .control-row--middle {
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  grid-template-columns: repeat(4, minmax(170px, 1fr));
 }
 
 .control-row--actions {
@@ -125,7 +126,7 @@ button.primary {
 .dow,
 .day-cell {
   border-radius: 10px;
-  min-height: 72px;
+  min-height: 86px;
   border: 1px solid var(--border);
   padding: 0.35rem;
 }
@@ -163,6 +164,7 @@ button.primary {
 
 .m-production { background: rgba(255, 243, 219, 0.92); }
 .m-queue { background: rgba(255, 229, 202, 0.92); }
+.m-carrier { background: rgba(250, 221, 199, 0.92); }
 .m-transit { background: rgba(244, 215, 197, 0.92); }
 .m-delivery-earliest { background: rgba(243, 219, 212, 0.94); }
 .m-delivery-latest { background: rgba(236, 206, 201, 0.94); }
@@ -172,6 +174,7 @@ button.primary {
 
 .day-cell.status-production { background: var(--production-cell); }
 .day-cell.status-queue { background: var(--queue-cell); }
+.day-cell.status-carrier { background: var(--carrier-cell); }
 .day-cell.status-transit { background: var(--transit-cell); }
 .day-cell.status-blocked-production { background: var(--blocked-prod-cell); color: #fff; }
 .day-cell.status-blocked-shipping { background: var(--blocked-ship-cell); color: #fff; }

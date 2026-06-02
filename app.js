@@ -139,6 +139,7 @@ const refs = {
   orderDate: document.getElementById("orderDate"),
   productionDays: document.getElementById("productionDays"),
   shippingMethod: document.getElementById("shippingMethod"),
+  queueCutoff: document.getElementById("queueCutoff"),
   calculateBtn: document.getElementById("calculateBtn"),
   monthLabel: document.getElementById("monthLabel"),
   calendar: document.getElementById("calendar"),
@@ -160,11 +161,11 @@ function init() {
     calculate();
   });
 
-
   refs.calculateBtn.addEventListener("click", calculate);
   refs.orderDate.addEventListener("change", calculate);
   refs.productionDays.addEventListener("change", calculate);
   refs.shippingMethod.addEventListener("change", calculate);
+  refs.queueCutoff.addEventListener("change", calculate);
 
   refs.prevMonth.addEventListener("click", () => shiftMonth(-1));
   refs.nextMonth.addEventListener("click", () => shiftMonth(1));
@@ -220,7 +221,8 @@ function calculate() {
     productionDays,
     shippingMin: method.min,
     shippingMax: method.max,
-    shippingUsesUSHolidays: method.applyUSHolidays
+    shippingUsesUSHolidays: method.applyUSHolidays,
+    queueCutoff: refs.queueCutoff.value
   });
 
   state.timeline = timeline;
@@ -230,7 +232,7 @@ function calculate() {
   renderCalendar();
 }
 
-function buildTimeline({ orderDate, productionDays, shippingMin, shippingMax, shippingUsesUSHolidays }) {
+function buildTimeline({ orderDate, productionDays, shippingMin, shippingMax, shippingUsesUSHolidays, queueCutoff }) {
   const years = new Set([orderDate.getUTCFullYear(), orderDate.getUTCFullYear() + 1]);
   const usHolidayMap = buildUSHolidayMap(years);
   const usHolidaySet = new Set(usHolidayMap.keys());
@@ -245,10 +247,11 @@ function buildTimeline({ orderDate, productionDays, shippingMin, shippingMax, sh
   }
 
   const productionEnd = productionDaysList[productionDaysList.length - 1];
-  const queueDay = nextBusinessDay(addDaysUTC(productionEnd, 1), usHolidaySet);
+  const queueDay = productionEnd;
 
   const shippingHolidaySet = shippingUsesUSHolidays ? usHolidaySet : new Set();
-  const shipStart = nextBusinessDay(addDaysUTC(queueDay, 1), shippingHolidaySet);
+  const carrierReceivedDay = getCarrierReceivedDay(queueDay, queueCutoff, shippingHolidaySet);
+  const shipStart = nextBusinessDay(addDaysUTC(carrierReceivedDay, 1), shippingHolidaySet);
   const transitMinDays = collectBusinessDays(shipStart, shippingMin, shippingHolidaySet);
   const transitMaxDays = collectBusinessDays(shipStart, shippingMax, shippingHolidaySet);
 
@@ -259,6 +262,7 @@ function buildTimeline({ orderDate, productionDays, shippingMin, shippingMax, sh
     anchorDate: orderDate,
     productionDays: productionDaysList,
     queueDay,
+    carrierReceivedDay,
     transitDaysMin: transitMinDays,
     transitDaysMax: transitMaxDays,
     earliestDelivery,
@@ -311,16 +315,20 @@ function buildDayCell(date, visibleMonth) {
   const hasNoShipping = Boolean(holidayName && isWeekday && state.timeline.shippingUsesUSHolidays);
   const isProduction = hasDate(state.timeline.productionDays, dateKey);
   const isQueue = toISODate(state.timeline.queueDay) === dateKey;
+  const isCarrierReceived = toISODate(state.timeline.carrierReceivedDay) === dateKey;
   const isTransit = hasDate(state.timeline.transitDaysMax, dateKey);
 
   if (isProduction) {
     tags.push({ cls: "m-production", label: "Production" });
   }
   if (isQueue) {
-    tags.push({ cls: "m-queue", label: "Queue" });
+    tags.push({ cls: "m-queue", label: "Queue for Shipment" });
+  }
+  if (isCarrierReceived) {
+    tags.push({ cls: "m-carrier", label: "Carrier received" });
   }
   if (isTransit) {
-    tags.push({ cls: "m-transit", label: "Transit" });
+    tags.push({ cls: "m-transit", label: "Transit Day" });
   }
   if (hasNoProduction) {
     tags.push({ cls: "m-blocked", label: "No Production" });
@@ -339,12 +347,14 @@ function buildDayCell(date, visibleMonth) {
     cell.classList.add("status-blocked-production");
   } else if (hasNoShipping) {
     cell.classList.add("status-blocked-shipping");
-  } else if (isProduction) {
-    cell.classList.add("status-production");
-  } else if (isQueue) {
-    cell.classList.add("status-queue");
   } else if (isTransit) {
     cell.classList.add("status-transit");
+  } else if (isCarrierReceived) {
+    cell.classList.add("status-carrier");
+  } else if (isQueue) {
+    cell.classList.add("status-queue");
+  } else if (isProduction) {
+    cell.classList.add("status-production");
   }
 
   const isEarliestDelivery = dateKey === toISODate(state.timeline.earliestDelivery);
@@ -384,7 +394,8 @@ function buildDayCell(date, visibleMonth) {
 function renderLegend() {
   refs.legend.innerHTML = `
     <span class="legend-item" title="Production business days"><span class="swatch" style="background: var(--production-cell)"></span>Production</span>
-    <span class="legend-item" title="Queue for shipment day"><span class="swatch" style="background: var(--queue-cell)"></span>Queue for shipment</span>
+    <span class="legend-item" title="Final production day that queues for shipment"><span class="swatch" style="background: var(--queue-cell)"></span>Queue for shipment</span>
+    <span class="legend-item" title="Date the courier receives the package"><span class="swatch" style="background: var(--carrier-cell)"></span>Carrier received</span>
     <span class="legend-item" title="Transit business days"><span class="swatch" style="background: var(--transit-cell)"></span>Transit days</span>
     <span class="legend-item" title="Earliest delivery estimate"><span class="swatch" style="background: var(--delivery-earliest-cell)"></span>Earliest delivery</span>
     <span class="legend-item" title="Latest delivery estimate"><span class="swatch" style="background: var(--delivery-latest-cell)"></span>Latest delivery</span>
@@ -440,6 +451,14 @@ function collectBusinessDays(startDate, count, holidaySet) {
     cursor = addDaysUTC(cursor, 1);
   }
   return result;
+}
+
+function getCarrierReceivedDay(queueDay, queueCutoff, shippingHolidaySet) {
+  if (queueCutoff === "before") {
+    return queueDay;
+  }
+
+  return nextBusinessDay(addDaysUTC(queueDay, 1), shippingHolidaySet);
 }
 
 function hasDate(list, isoDate) {
