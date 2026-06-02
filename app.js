@@ -136,11 +136,9 @@ const state = {
 
 const refs = {
   domainSelect: document.getElementById("domainSelect"),
-  timezoneSelect: document.getElementById("timezoneSelect"),
   orderDate: document.getElementById("orderDate"),
   productionDays: document.getElementById("productionDays"),
   shippingMethod: document.getElementById("shippingMethod"),
-  todayBtn: document.getElementById("todayBtn"),
   calculateBtn: document.getElementById("calculateBtn"),
   monthLabel: document.getElementById("monthLabel"),
   calendar: document.getElementById("calendar"),
@@ -155,22 +153,13 @@ function init() {
   populateDomains();
   refs.domainSelect.value = "US";
   populateMethods("US");
-  setOrderDateToTodayInZone();
+  setOrderDateToToday();
 
   refs.domainSelect.addEventListener("change", () => {
     populateMethods(refs.domainSelect.value);
     calculate();
   });
 
-  refs.timezoneSelect.addEventListener("change", () => {
-    if (!refs.orderDate.value) {
-      setOrderDateToTodayInZone();
-    }
-  });
-
-  refs.todayBtn.addEventListener("click", () => {
-    setOrderDateToTodayInZone();
-  });
 
   refs.calculateBtn.addEventListener("click", calculate);
   refs.orderDate.addEventListener("change", calculate);
@@ -205,22 +194,11 @@ function populateMethods(domainCode) {
   });
 }
 
-function setOrderDateToTodayInZone() {
-  const tz = refs.timezoneSelect.value;
-  const todayISO = getTodayInTimeZoneISO(tz);
-  refs.orderDate.value = todayISO;
+function setOrderDateToToday() {
+  const today = new Date();
+  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+  refs.orderDate.value = today.toISOString().slice(0, 10);
   calculate();
-}
-
-function getTodayInTimeZoneISO(timeZone) {
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  });
-  const [{ value: year }, , { value: month }, , { value: day }] = formatter.formatToParts(new Date());
-  return `${year}-${month}-${day}`;
 }
 
 function calculate() {
