@@ -68,7 +68,7 @@ body {
 }
 
 .control-row--middle {
-  grid-template-columns: repeat(3, minmax(170px, 1fr));
+  grid-template-columns: minmax(145px, 0.8fr) minmax(145px, 0.8fr) minmax(300px, 1.4fr);
 }
 
 .control-row--actions {
